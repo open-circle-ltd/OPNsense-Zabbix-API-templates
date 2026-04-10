@@ -267,6 +267,21 @@ zabbix_export:
                 - '-1'
           timeout: 5s
           url: '{$BASEURL}/api/core/service/search'
+        - uuid: 9ab4f75651d348909b7576690d8cfd9f
+          name: 'Get Wireguard Status'
+          type: HTTP_AGENT
+          key: opnsense.wireguard.status
+          history: 1d
+          value_type: TEXT
+          authtype: BASIC
+          username: '{$APIKEY}'
+          password: '{$APISECRET}'
+          preprocessing:
+            - type: CHECK_NOT_SUPPORTED
+              parameters:
+                - '-1'
+          timeout: 10s
+          url: '{$BASEURL}/api/wireguard/service/show'
         - uuid: da9a81155ca249ba94a7b83565576768
           name: 'Memory utilization'
           key: 'vm.memory.size[pused]'
@@ -894,6 +909,66 @@ zabbix_export:
                       });
                   }
                   return JSON.stringify(output);
+        - uuid: 3c0e487742714df4a24247f41b1e30bb
+          name: 'Wireguard Discovery'
+          type: DEPENDENT
+          key: 'opnsense.wireguard.discovery[instances]'
+          enabled_lifetime_type: DISABLE_NEVER
+          item_prototypes:
+            - uuid: 3bd06d98432f4bceb054c3d85a2b5d40
+              name: 'Wireguard {#WGTUNNELNAME}: Peer {#WGNAME} status'
+              type: DEPENDENT
+              key: 'opnsense.wireguard.status[{#WGTUNNELNAME}-{#WGNAME}]'
+              valuemap:
+                name: 'Wireguard Status'
+              preprocessing:
+                - type: CHECK_NOT_SUPPORTED
+                  parameters:
+                    - '-1'
+                - type: JAVASCRIPT
+                  parameters:
+                    - |
+                      var input = JSON.parse(value);
+                      for(var i in input["rows"]){
+                          if("{#WGNAME}" == input["rows"][i]["name"] ){
+                              switch(input["rows"][i]["peer-status"]){
+                                  case "online":
+                                      return 0;
+                                      break;
+                                  case "offline":
+                                      return 1;
+                                      break;
+                                  case "stale":
+                                      return 2;
+                                      break;
+                                  default:
+                                      return 3;
+                              }
+                          }
+                      }
+              master_item:
+                key: opnsense.wireguard.status
+          master_item:
+            key: opnsense.wireguard.status
+          preprocessing:
+            - type: JAVASCRIPT
+              parameters:
+                - |
+                  var input = JSON.parse(value);
+                  var output = { "data": new Array() };
+                  for (var i in input["rows"]) {
+                    if (input["rows"][i]["type"] === "peer") {
+                      output["data"].push({
+                        "{#WGNAME}": input["rows"][i]["name"],
+                        "{#WGHANDSHAKE}": input["rows"][i]["latest-handshake-age"],
+                        "{#WGSTATUS}": input["rows"][i]["peer-status"],
+                        "{#WGRX}": input["rows"][i]["transfer-rx"],
+                        "{#WGTX}": input["rows"][i]["transfer-tx"],
+                        "{#WGTUNNELNAME}": input["rows"][i]["ifname"],
+                      });
+                    };
+                  };
+                  return JSON.stringify(output);
       tags:
         - tag: class
           value: software
@@ -984,6 +1059,15 @@ zabbix_export:
             - value: '1'
               newvalue: running
             - newvalue: stopped
+        - uuid: 8b9354678f004bcd8c4c43820663d109
+          name: 'Wireguard Status'
+          mappings:
+            - value: '0'
+              newvalue: online
+            - value: '1'
+              newvalue: offline
+            - value: '2'
+              newvalue: stale
         - uuid: 3b87754d623c49ae9eeb9c049f36fba4
           name: zabbix.host.available
           mappings:
