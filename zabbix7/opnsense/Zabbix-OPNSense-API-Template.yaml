@@ -455,7 +455,7 @@ zabbix_export:
           filter:
             conditions:
               - macro: '{#IFNAME}'
-                value: lo0|openvpn|enc0|pfsync0|pflog0
+                value: lo0|openvpn|enc0|pfsync0|pflog0|wg
                 operator: NOT_MATCHES_REGEX
           enabled_lifetime_type: DISABLE_NEVER
           item_prototypes:
