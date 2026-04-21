@@ -1150,15 +1150,6 @@ zabbix_export:
               newvalue: offline
             - value: '2'
               newvalue: stale
-        - uuid: 3b87754d623c49ae9eeb9c049f36fba4
-          name: zabbix.host.available
-          mappings:
-            - value: '0'
-              newvalue: 'Não disponível'
-            - value: '1'
-              newvalue: Disponível
-            - value: '2'
-              newvalue: Desconhecido
   triggers:
     - uuid: 65237821f48d491da7d84ab8c5d20217
       expression: 'last(/OPNSENSE-BY-API/opnsense.firmware.current) <> last(/OPNSENSE-BY-API/opnsense.firmware.latest)'
