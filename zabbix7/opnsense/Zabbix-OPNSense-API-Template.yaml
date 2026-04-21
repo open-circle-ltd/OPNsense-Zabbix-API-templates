@@ -1102,41 +1102,20 @@ zabbix_export:
           value: opnsense
       macros:
         - macro: '{$AGENT.TIMEOUT}'
-          value: '300'
-          description: 'timeout in seconds'
+          value: 3m
+          description: 'Timeout after which the agent is considered unavailable. Works only for agents reachable from Zabbix server/proxy (in passive mode).'
         - macro: '{$APIKEY}'
-          value: 'api key comes here'
+          value: SET_API_KEY
+          description: 'API Key'
         - macro: '{$APISECRET}'
-          value: 'api secret comes here'
+          value: SET_API_SECRET
+          description: 'API Secret'
         - macro: '{$BASEURL}'
-          value: 'firewall url like http://127.0.0.1:8443'
+          value: 'https://127.0.0.1:8443'
+          description: 'URL for WebUI, e.g. https://127.0.0.1 for the local agent'
         - macro: '{$FIREWALL.CHANGE.THRESHOLD}'
           value: '50'
           description: 'Percentage threshold for firewall action changes'
-        - macro: '{$VFS.FS.FSNAME.MATCHES}'
-          value: .+
-          description: 'Used for filesystem discovery. Can be overridden on the host or linked template level.'
-        - macro: '{$VFS.FS.FSNAME.NOT_MATCHES}'
-          value: ^(/dev|/sys|/run|/proc|.+/shm$)
-          description: 'Used for filesystem discovery. Can be overridden on the host or linked template level.'
-        - macro: '{$VFS.FS.FSTYPE.MATCHES}'
-          value: ^(btrfs|ext2|ext3|ext4|reiser|xfs|ffs|ufs|jfs|jfs2|vxfs|hfs|apfs|refs|ntfs|fat32|zfs)$
-          description: 'Used for filesystem discovery. Can be overridden on the host or linked template level.'
-        - macro: '{$VFS.FS.FSTYPE.NOT_MATCHES}'
-          value: ^\s$
-          description: 'Used for filesystem discovery. Can be overridden on the host or linked template level.'
-        - macro: '{$VFS.FS.INODE.PFREE.MIN.CRIT}'
-          value: '10'
-          description: 'The critical threshold of the filesystem metadata utilization.'
-        - macro: '{$VFS.FS.INODE.PFREE.MIN.WARN}'
-          value: '20'
-          description: 'The warning threshold of the filesystem metadata utilization.'
-        - macro: '{$VFS.FS.PUSED.MAX.CRIT}'
-          value: '90'
-          description: 'The critical threshold of the filesystem utilization.'
-        - macro: '{$VFS.FS.PUSED.MAX.WARN}'
-          value: '80'
-          description: 'The warning threshold of the filesystem utilization.'
       valuemaps:
         - uuid: 9505857b9b4340a29222ee79348bbd2f
           name: 'Gateway Status'
