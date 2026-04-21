@@ -864,15 +864,15 @@ zabbix_export:
           key: opnsense.service.discovery
           filter:
             conditions:
-              - macro: '{#SVCNAME}'
+              - macro: '{#SVCID}'
                 value: '^(?:dpinger.*|iperf|dhcpd6)$'
                 operator: NOT_MATCHES_REGEX
           enabled_lifetime_type: DISABLE_NEVER
           item_prototypes:
             - uuid: a8a28b1888c548c1995424170a67280e
-              name: 'Service {#SVCNAME} Status'
+              name: 'Service {#SVCDESC} Status'
               type: DEPENDENT
-              key: 'opnsense.service.status[{#SVCNAME}]'
+              key: 'opnsense.service.status[{#SVCID}]'
               valuemap:
                 name: 'Service Status'
               preprocessing:
@@ -884,7 +884,7 @@ zabbix_export:
                     - |
                       var input = JSON.parse(value);
                       for(var i in input["rows"]){
-                          if("{#SVCNAME}" == input["rows"][i]["id"]){
+                          if("{#SVCID}" == input["rows"][i]["id"]){
                               return input["rows"][i]["running"];
                           }
                       }
@@ -892,7 +892,7 @@ zabbix_export:
                 key: opnsense.service.get
               trigger_prototypes:
                 - uuid: 12379ec34f674c07a37f2307744727d5
-                  expression: 'avg(/OPNSENSE-BY-API/opnsense.service.status[{#SVCNAME}], 3m)<>1'
+                  expression: 'avg(/OPNSENSE-BY-API/opnsense.service.status[{#SVCID}], 3m)<>1'
                   name: '{HOST.HOST}: Service {#SVCNAME} is stopped'
                   priority: WARNING
           master_item:
@@ -905,7 +905,8 @@ zabbix_export:
                   var output = {"data": new Array()};
                   for(var i in input["rows"]){
                       output["data"].push({
-                          "{#SVCNAME}": input["rows"][i]["id"]
+                          "{#SVCDESC}": input["rows"][i]["description"],
+                          "{#SVCID}": input["rows"][i]["id"]
                       });
                   }
                   return JSON.stringify(output);
