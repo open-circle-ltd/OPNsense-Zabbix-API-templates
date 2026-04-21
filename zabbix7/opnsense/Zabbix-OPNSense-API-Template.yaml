@@ -916,6 +916,60 @@ zabbix_export:
           key: 'opnsense.wireguard.discovery[instances]'
           enabled_lifetime_type: DISABLE_NEVER
           item_prototypes:
+            - uuid: 4ca9e7a3bb624e198de569000cd3ee78
+              name: 'Wireguard {#WGTUNNELNAME}: Peer {#WGNAME}: Incoming network traffic'
+              type: DEPENDENT
+              key: 'opnsense.wireguard.in[{#WGTUNNELNAME}-{#WGNAME}]'
+              units: bps
+              preprocessing:
+                - type: CHECK_NOT_SUPPORTED
+                  parameters:
+                    - '-1'
+                - type: JAVASCRIPT
+                  parameters:
+                    - |
+                      var input = JSON.parse(value);
+                      for(var i in input["rows"]){
+                        if("{#WGNAME}" == input["rows"][i]["name"] ){
+                          return input["rows"][i]["transfer-rx"];
+                        }
+                      }
+                - type: CHANGE_PER_SECOND
+                - type: MULTIPLIER
+                  parameters:
+                    - '8'
+              master_item:
+                key: opnsense.wireguard.status
+              tags:
+                - tag: component
+                  value: vpn
+            - uuid: 257d78f39bac4023a8ac7b01d9fcf92e
+              name: 'Wireguard {#WGTUNNELNAME}: Peer {#WGNAME}: Outgoing network traffic'
+              type: DEPENDENT
+              key: 'opnsense.wireguard.out[{#WGTUNNELNAME}-{#WGNAME}]'
+              units: bps
+              preprocessing:
+                - type: CHECK_NOT_SUPPORTED
+                  parameters:
+                    - '-1'
+                - type: JAVASCRIPT
+                  parameters:
+                    - |
+                      var input = JSON.parse(value);
+                      for(var i in input["rows"]){
+                        if("{#WGNAME}" == input["rows"][i]["name"] ){
+                          return input["rows"][i]["transfer-tx"];
+                        }
+                      }
+                - type: CHANGE_PER_SECOND
+                - type: MULTIPLIER
+                  parameters:
+                    - '8'
+              master_item:
+                key: opnsense.wireguard.status
+              tags:
+                - tag: component
+                  value: vpn
             - uuid: 3bd06d98432f4bceb054c3d85a2b5d40
               name: 'Wireguard {#WGTUNNELNAME}: Peer {#WGNAME} status'
               type: DEPENDENT
@@ -949,6 +1003,33 @@ zabbix_export:
                       }
               master_item:
                 key: opnsense.wireguard.status
+              tags:
+                - tag: component
+                  value: vpn
+              trigger_prototypes:
+                - uuid: 791e1896bf29425680105a9c6589b2e1
+                  expression: 'avg(/OPNSENSE-BY-API/opnsense.wireguard.status[{#WGTUNNELNAME}-{#WGNAME}],#5)<>0'
+                  name: '{HOST.HOST}: Wireguard Tunnel {#WGTUNNELNAME} to {#WGNAME} not connected'
+                  priority: AVERAGE
+                  tags:
+                    - tag: component
+                      value: vpn
+          graph_prototypes:
+            - uuid: 63281c2a97724a8ebba0dbca405eb8dc
+              name: 'Wireguard {#WGTUNNELNAME} Peer {#WGNAME}: Network traffic'
+              ymin_type_1: FIXED
+              graph_items:
+                - color: 00AA00
+                  calc_fnc: ALL
+                  item:
+                    host: OPNSENSE-BY-API
+                    key: 'opnsense.wireguard.in[{#WGTUNNELNAME}-{#WGNAME}]'
+                - sortorder: '1'
+                  color: 3333FF
+                  calc_fnc: ALL
+                  item:
+                    host: OPNSENSE-BY-API
+                    key: 'opnsense.wireguard.out[{#WGTUNNELNAME}-{#WGNAME}]'
           master_item:
             key: opnsense.wireguard.status
           preprocessing:
