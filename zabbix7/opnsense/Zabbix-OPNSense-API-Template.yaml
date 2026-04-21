@@ -495,6 +495,11 @@ zabbix_export:
                     - '8'
               master_item:
                 key: opnsense.interface.statistics
+              tags:
+                - tag: component
+                  value: network
+                - tag: interface
+                  value: '{#IFALIAS}'
             - uuid: cc0951c383eb44dc9797397e12459bcf
               name: 'Egress traffic on interface {#IFALIAS}'
               type: DEPENDENT
@@ -531,6 +536,27 @@ zabbix_export:
                     - '8'
               master_item:
                 key: opnsense.interface.statistics
+              tags:
+                - tag: component
+                  value: network
+                - tag: interface
+                  value: '{#IFALIAS}'
+          graph_prototypes:
+            - uuid: 6feaf08dfd204c1ca93c0165c184e58f
+              name: 'Interface {#IFALIAS}: Network traffic'
+              ymin_type_1: FIXED
+              graph_items:
+                - color: 00AA00
+                  calc_fnc: ALL
+                  item:
+                    host: OPNSENSE-BY-API
+                    key: 'opnsense.interface.traffic.in[{#IFNAME}]'
+                - sortorder: '1'
+                  color: 3333FF
+                  calc_fnc: ALL
+                  item:
+                    host: OPNSENSE-BY-API
+                    key: 'opnsense.interface.traffic.out[{#IFNAME}]'
           master_item:
             key: opnsense.interface.statistics
           preprocessing:
@@ -868,6 +894,7 @@ zabbix_export:
                 value: '^(?:dpinger.*|iperf|dhcpd6)$'
                 operator: NOT_MATCHES_REGEX
           enabled_lifetime_type: DISABLE_NEVER
+          description: 'Discover running OPNsense services'
           item_prototypes:
             - uuid: a8a28b1888c548c1995424170a67280e
               name: 'Service {#SVCDESC} Status'
@@ -913,8 +940,9 @@ zabbix_export:
         - uuid: 3c0e487742714df4a24247f41b1e30bb
           name: 'Wireguard Discovery'
           type: DEPENDENT
-          key: 'opnsense.wireguard.discovery[instances]'
+          key: opnsense.wireguard.discovery
           enabled_lifetime_type: DISABLE_NEVER
+          description: 'Discover active Wireguard instances and peers'
           item_prototypes:
             - uuid: 4ca9e7a3bb624e198de569000cd3ee78
               name: 'Wireguard {#WGTUNNELNAME}: Peer {#WGNAME}: Incoming network traffic'
@@ -943,6 +971,10 @@ zabbix_export:
               tags:
                 - tag: component
                   value: vpn
+                - tag: instance
+                  value: '{#WGTUNNELNAME}'
+                - tag: peer
+                  value: '{#WGNAME}'
             - uuid: 257d78f39bac4023a8ac7b01d9fcf92e
               name: 'Wireguard {#WGTUNNELNAME}: Peer {#WGNAME}: Outgoing network traffic'
               type: DEPENDENT
@@ -970,6 +1002,10 @@ zabbix_export:
               tags:
                 - tag: component
                   value: vpn
+                - tag: instance
+                  value: '{#WGTUNNELNAME}'
+                - tag: peer
+                  value: '{#WGNAME}'
             - uuid: 3bd06d98432f4bceb054c3d85a2b5d40
               name: 'Wireguard {#WGTUNNELNAME}: Peer {#WGNAME} status'
               type: DEPENDENT
@@ -1006,6 +1042,10 @@ zabbix_export:
               tags:
                 - tag: component
                   value: vpn
+                - tag: instance
+                  value: '{#WGTUNNELNAME}'
+                - tag: peer
+                  value: '{#WGNAME}'
               trigger_prototypes:
                 - uuid: 791e1896bf29425680105a9c6589b2e1
                   expression: 'avg(/OPNSENSE-BY-API/opnsense.wireguard.status[{#WGTUNNELNAME}-{#WGNAME}],#5)<>0'
@@ -1014,6 +1054,10 @@ zabbix_export:
                   tags:
                     - tag: component
                       value: vpn
+                    - tag: instance
+                      value: '{#WGTUNNELNAME}'
+                    - tag: peer
+                      value: '{#WGNAME}'
           graph_prototypes:
             - uuid: 63281c2a97724a8ebba0dbca405eb8dc
               name: 'Wireguard {#WGTUNNELNAME} Peer {#WGNAME}: Network traffic'
