@@ -35,6 +35,9 @@ zabbix_export:
           value_type: FLOAT
           units: '%'
           params: '100 - last(/{HOST.HOST}/system.cpu.util[,idle])'
+          tags:
+            - tag: component
+              value: cpu
         - uuid: 8dc34c94995c4b518f6271415cbb83ef
           name: 'Firewall Block Actions'
           type: DEPENDENT
@@ -55,11 +58,15 @@ zabbix_export:
                   return 0;
           master_item:
             key: opnsense.firewall.stats
+          tags:
+            - tag: component
+              value: firewall
           triggers:
             - uuid: d641f23d13e14613af4a3a0e6ce782c9
               expression: '(last(/OPNSENSE-BY-API/opnsense.firewall.block)-avg(/OPNSENSE-BY-API/opnsense.firewall.block,10m))/avg(/OPNSENSE-BY-API/opnsense.firewall.block,10m)*100>{$FIREWALL.CHANGE.THRESHOLD}'
               name: 'Significant increase in firewall block actions'
-              event_name: '{HOST.HOST}: Firewall block actions increased significantly: {ITEM.LASTVALUE}'
+              event_name: 'Significant increase in firewall block actions (>{$FIREWALL.CHANGE.THRESHOLD}%)'
+              opdata: 'Block actions: {ITEM.LASTVALUE}'
               priority: WARNING
               description: 'Firewall block actions increased by more than {$FIREWALL.CHANGE.THRESHOLD}% compared to 10-minute average'
         - uuid: 7cb46709b5164ab5906158164fdead93
@@ -82,11 +89,15 @@ zabbix_export:
                   return 0;
           master_item:
             key: opnsense.firewall.stats
+          tags:
+            - tag: component
+              value: firewall
           triggers:
             - uuid: be5a04d03e334c8d94bf6e9592edd4cd
               expression: '(last(/OPNSENSE-BY-API/opnsense.firewall.pass)-avg(/OPNSENSE-BY-API/opnsense.firewall.pass,10m))/avg(/OPNSENSE-BY-API/opnsense.firewall.pass,10m)*100>{$FIREWALL.CHANGE.THRESHOLD}'
               name: 'Significant increase in firewall pass actions'
-              event_name: '{HOST.HOST}: Firewall pass actions increased significantly: {ITEM.LASTVALUE}'
+              event_name: 'Significant increase in firewall pass actions (>{$FIREWALL.CHANGE.THRESHOLD}%)'
+              opdata: 'Pass actions: {ITEM.LASTVALUE}'
               priority: INFO
               description: 'Firewall pass actions increased by more than {$FIREWALL.CHANGE.THRESHOLD}% compared to 10-minute average'
         - uuid: c702632342144c00b4937946bb852e85
@@ -109,11 +120,15 @@ zabbix_export:
                   return 0;
           master_item:
             key: opnsense.firewall.stats
+          tags:
+            - tag: component
+              value: firewall
           triggers:
             - uuid: 69aa4a5bf4df4f78bd6643e2d1e29f99
               expression: '(last(/OPNSENSE-BY-API/opnsense.firewall.rdr)-avg(/OPNSENSE-BY-API/opnsense.firewall.rdr,10m))/avg(/OPNSENSE-BY-API/opnsense.firewall.rdr,10m)*100>{$FIREWALL.CHANGE.THRESHOLD}'
               name: 'Significant increase in firewall redirect actions'
-              event_name: '{HOST.HOST}: Firewall redirect actions increased significantly: {ITEM.LASTVALUE}'
+              event_name: 'Significant increase in firewall redirect actions (>{$FIREWALL.CHANGE.THRESHOLD}% for 10m)'
+              opdata: 'Redirect actions: {ITEM.LASTVALUE}'
               priority: INFO
               description: 'Firewall redirect actions increased by more than {$FIREWALL.CHANGE.THRESHOLD}% compared to 10-minute average'
         - uuid: 37a8583901e14ffb9081d0ff9511216f
@@ -121,17 +136,21 @@ zabbix_export:
           type: HTTP_AGENT
           key: opnsense.firewall.stats
           delay: 10s
-          history: 1d
+          history: 1h
           value_type: TEXT
           authtype: BASIC
           username: '{$APIKEY}'
           password: '{$APISECRET}'
+          description: 'Firewall block/pass statistics'
           preprocessing:
             - type: CHECK_NOT_SUPPORTED
               parameters:
                 - '-1'
           timeout: 5s
           url: '{$BASEURL}/api/diagnostics/firewall/stats?group_by=action'
+          tags:
+            - tag: component
+              value: raw
         - uuid: 6d87b7459607448fbd6d2ec2fd44e1f3
           name: 'Firmware Version'
           type: DEPENDENT
@@ -145,11 +164,11 @@ zabbix_export:
             - type: JSONPATH
               parameters:
                 - $.product.product_version
-            - type: JAVASCRIPT
-              parameters:
-                - 'return value.split(''.'').slice(0, 2).join(''.'');'
           master_item:
             key: opnsense.firmware.status
+          tags:
+            - tag: component
+              value: os
         - uuid: b590fde958314341ac4b951c34ba0456
           name: 'Firmware Latest'
           type: DEPENDENT
@@ -163,11 +182,11 @@ zabbix_export:
             - type: JSONPATH
               parameters:
                 - $.product.product_latest
-            - type: JAVASCRIPT
-              parameters:
-                - 'return value.split(''.'').slice(0, 2).join(''.'');'
           master_item:
             key: opnsense.firmware.status
+          tags:
+            - tag: component
+              value: os
         - uuid: 70e1f07d5cd041a0ba3b48d643a46139
           name: 'Get Firmware Status'
           type: HTTP_AGENT
@@ -178,17 +197,21 @@ zabbix_export:
           authtype: BASIC
           username: '{$APIKEY}'
           password: '{$APISECRET}'
+          description: 'Get firmware info'
           preprocessing:
             - type: CHECK_NOT_SUPPORTED
               parameters:
                 - '-1'
           timeout: 10s
           url: '{$BASEURL}/api/core/firmware/status'
+          tags:
+            - tag: component
+              value: raw
         - uuid: ff720ef670694acd834db3e8d69d2de0
           name: 'Get Gateways Status'
           type: HTTP_AGENT
           key: opnsense.gateways.status
-          history: 1d
+          history: 1h
           value_type: TEXT
           authtype: BASIC
           username: '{$APIKEY}'
@@ -199,19 +222,22 @@ zabbix_export:
                 - '-1'
           timeout: 10s
           url: '{$BASEURL}/api/routes/gateway/status'
+          tags:
+            - tag: component
+              value: raw
           triggers:
             - uuid: 777c7080ef6e4f3aaaf3bdcfc949bfa4
-              expression: 'nodata(/OPNSENSE-BY-API/opnsense.gateways.status,3m)=1'
-              name: 'Indisponível via API'
-              event_name: '{HOST.HOST}: Indisponível via API'
+              expression: 'nodata(/OPNSENSE-BY-API/opnsense.gateways.status,{$AGENT.TIMEOUT})=1'
+              name: 'Unavailable via API'
+              event_name: 'Unavailable via API (for {$AGENT.TIMEOUT})'
               priority: AVERAGE
-              description: 'Firewall became unreachable by http api'
+              description: 'Firewall became unreachable by http API'
               manual_close: 'YES'
         - uuid: 381ec8a82e15406a8e3d719577cca698
           name: 'Get Interface Statistics'
           type: HTTP_AGENT
           key: opnsense.interface.statistics
-          history: 1d
+          history: 1h
           value_type: TEXT
           authtype: BASIC
           username: '{$APIKEY}'
@@ -222,11 +248,14 @@ zabbix_export:
                 - '-1'
           timeout: 5s
           url: '{$BASEURL}/api/diagnostics/interface/get_interface_statistics'
+          tags:
+            - tag: component
+              value: raw
         - uuid: 9d9b53b496c14b8eb31138ccc7020beb
           name: 'Get IPSec Tunnels'
           type: HTTP_AGENT
           key: opnsense.ipsec.tunnels
-          history: 1d
+          history: 1h
           value_type: TEXT
           authtype: BASIC
           username: '{$APIKEY}'
@@ -237,11 +266,14 @@ zabbix_export:
                 - '-1'
           timeout: 10s
           url: '{$BASEURL}/api/ipsec/sessions/searchPhase1'
+          tags:
+            - tag: component
+              value: raw
         - uuid: 3066565299434e9b9dbfa7dfee6f9712
           name: 'Get OpenVPN Statistics'
           type: HTTP_AGENT
           key: opnsense.openvpn.statistics
-          history: 1d
+          history: 1h
           value_type: TEXT
           authtype: BASIC
           username: '{$APIKEY}'
@@ -252,11 +284,14 @@ zabbix_export:
                 - '-1'
           timeout: 10s
           url: '{$BASEURL}/api/openvpn/service/searchSessions'
+          tags:
+            - tag: component
+              value: raw
         - uuid: 419871d2614649dc87a088b2d60ba943
           name: 'Get Services'
           type: HTTP_AGENT
           key: opnsense.service.get
-          history: 1d
+          history: 1h
           value_type: TEXT
           authtype: BASIC
           username: '{$APIKEY}'
@@ -267,11 +302,14 @@ zabbix_export:
                 - '-1'
           timeout: 5s
           url: '{$BASEURL}/api/core/service/search'
+          tags:
+            - tag: component
+              value: raw
         - uuid: 9ab4f75651d348909b7576690d8cfd9f
           name: 'Get Wireguard Status'
           type: HTTP_AGENT
           key: opnsense.wireguard.status
-          history: 1d
+          history: 1h
           value_type: TEXT
           authtype: BASIC
           username: '{$APIKEY}'
@@ -282,12 +320,18 @@ zabbix_export:
                 - '-1'
           timeout: 10s
           url: '{$BASEURL}/api/wireguard/service/show'
+          tags:
+            - tag: component
+              value: raw
         - uuid: da9a81155ca249ba94a7b83565576768
           name: 'Memory utilization'
           key: 'vm.memory.size[pused]'
           history: 7d
           value_type: FLOAT
           units: '%'
+          tags:
+            - tag: component
+              value: memory
       discovery_rules:
         - uuid: 6d12368211f64235a719c734cdde06ec
           name: 'Gateways Discovery'
@@ -296,7 +340,7 @@ zabbix_export:
           enabled_lifetime_type: DISABLE_NEVER
           item_prototypes:
             - uuid: 48bde6b0e032459c8d5f558eb8f90cf7
-              name: 'Gateway {#GWNAME} Address'
+              name: 'Gateway {#GWNAME}: Address'
               type: DEPENDENT
               key: 'opnsense.gateway.get[{#GWNAME}, address]'
               value_type: CHAR
@@ -315,16 +359,20 @@ zabbix_export:
                       }
               master_item:
                 key: opnsense.gateways.status
+              tags:
+                - tag: component
+                  value: gateway
               trigger_prototypes:
                 - uuid: bac7234301624efc90ec590159b97dbd
                   expression: 'change(/OPNSENSE-BY-API/opnsense.gateway.get[{#GWNAME}, address])=1'
-                  name: '{HOST.HOST}: Gateway {#GWNAME} address changed'
+                  name: 'Gateway {#GWNAME} address changed'
                   priority: WARNING
             - uuid: 8781228217fd4311beaf28e8ecc74788
-              name: 'Gateway {#GWNAME} Delay'
+              name: 'Gateway {#GWNAME}: Delay'
               type: DEPENDENT
               key: 'opnsense.gateway.get[{#GWNAME},delay]'
               value_type: FLOAT
+              units: ms
               preprocessing:
                 - type: CHECK_NOT_SUPPORTED
                   parameters:
@@ -335,7 +383,7 @@ zabbix_export:
                       var input = JSON.parse(value);
                       for(var i in input["items"]) {
                           if(input["items"][i]["name"] == "{#GWNAME}"){
-                              return input["items"][i]["delay"] == "~" ? "0" : input["items"][i]["delay"];
+                              return input["items"][i]["delay"] == "~" ? null : input["items"][i]["delay"];
                           }
                       }
                 - type: RTRIM
@@ -343,11 +391,15 @@ zabbix_export:
                     - 'ms ~'
               master_item:
                 key: opnsense.gateways.status
+              tags:
+                - tag: component
+                  value: gateway
             - uuid: 7cce16df73634e7baf7cc7f690bfd16d
-              name: 'Gateway {#GWNAME} Loss'
+              name: 'Gateway {#GWNAME}: Loss'
               type: DEPENDENT
               key: 'opnsense.gateway.get[{#GWNAME},loss]'
               value_type: FLOAT
+              units: '%'
               preprocessing:
                 - type: CHECK_NOT_SUPPORTED
                   parameters:
@@ -358,7 +410,7 @@ zabbix_export:
                       var input = JSON.parse(value);
                       for(var i in input["items"]) {
                           if(input["items"][i]["name"] == "{#GWNAME}"){
-                              return input["items"][i]["loss"] == "~" ? "0" : input["items"][i]["loss"];
+                              return input["items"][i]["loss"] == "~" ? null : input["items"][i]["loss"];
                           }
                       }
                 - type: TRIM
@@ -366,8 +418,11 @@ zabbix_export:
                     - '% ~'
               master_item:
                 key: opnsense.gateways.status
+              tags:
+                - tag: component
+                  value: gateway
             - uuid: ef193b6f2fc54e259201dbe4dfdea5ba
-              name: 'Gateway {#GWNAME} Status'
+              name: 'Gateway {#GWNAME}: Status'
               type: DEPENDENT
               key: 'opnsense.gateway.get[{#GWNAME},status]'
               valuemap:
@@ -392,30 +447,31 @@ zabbix_export:
               master_item:
                 key: opnsense.gateways.status
               tags:
-                - tag: Application
-                  value: Gateways
+                - tag: component
+                  value: gateway
               trigger_prototypes:
                 - uuid: 4c9c0274c10b488891f858a97769b0a7
-                  expression: 'avg(/OPNSENSE-BY-API/opnsense.gateway.get[{#GWNAME},status],1m)=4'
-                  name: '{HOST.HOST}: Gateway {#GWNAME} is down'
+                  expression: 'avg(/OPNSENSE-BY-API/opnsense.gateway.get[{#GWNAME},status],3m)=4'
+                  name: 'Gateway {#GWNAME} is down'
                   priority: WARNING
                 - uuid: cab4fecf581d4846a28d9e22cf01a1ac
-                  expression: 'avg(/OPNSENSE-BY-API/opnsense.gateway.get[{#GWNAME},status],1m)=2'
-                  name: '{HOST.HOST}: Gateway {#GWNAME} with delay'
+                  expression: 'avg(/OPNSENSE-BY-API/opnsense.gateway.get[{#GWNAME},status],3m)=2'
+                  name: 'Gateway {#GWNAME} with delay'
                   priority: WARNING
                 - uuid: 36eda2c369414033a2adeba2068416e9
-                  expression: 'avg(/OPNSENSE-BY-API/opnsense.gateway.get[{#GWNAME},status],1m)=3'
-                  name: '{HOST.HOST}: Gateway {#GWNAME} with delay and loss'
+                  expression: 'avg(/OPNSENSE-BY-API/opnsense.gateway.get[{#GWNAME},status],3m)=3'
+                  name: 'Gateway {#GWNAME} with delay and loss'
                   priority: WARNING
                 - uuid: cbf7c5cf056641d6a4fd164a146d868f
-                  expression: 'avg(/OPNSENSE-BY-API/opnsense.gateway.get[{#GWNAME},status],1m)=1'
-                  name: '{HOST.HOST}: Gateway {#GWNAME} with packet loss'
+                  expression: 'avg(/OPNSENSE-BY-API/opnsense.gateway.get[{#GWNAME},status],3m)=1'
+                  name: 'Gateway {#GWNAME} with packet loss'
                   priority: WARNING
             - uuid: fcdd1f2d9c674f1b9fb7e6e368f88ba8
-              name: 'Gateway {#GWNAME} Stddev'
+              name: 'Gateway {#GWNAME}: Stddev'
               type: DEPENDENT
               key: 'opnsense.gateway.get[{#GWNAME},stddev]'
               value_type: FLOAT
+              units: ms
               preprocessing:
                 - type: CHECK_NOT_SUPPORTED
                   parameters:
@@ -426,7 +482,7 @@ zabbix_export:
                       var input = JSON.parse(value);
                       for(var i in input["items"]) {
                           if(input["items"][i]["name"] == "{#GWNAME}"){
-                              return input["items"][i]["stddev"] == "~" ? "0" : input["items"][i]["stddev"];
+                              return input["items"][i]["stddev"] == "~" ? null : input["items"][i]["stddev"];
                           }
                       }
                 - type: TRIM
@@ -434,6 +490,9 @@ zabbix_export:
                     - 'ms ~'
               master_item:
                 key: opnsense.gateways.status
+              tags:
+                - tag: component
+                  value: gateway
           master_item:
             key: opnsense.gateways.status
           preprocessing:
@@ -460,7 +519,7 @@ zabbix_export:
           enabled_lifetime_type: DISABLE_NEVER
           item_prototypes:
             - uuid: 06c3fb36ef064a0697a6179ff92f873c
-              name: 'Ingress traffic on interface {#IFALIAS}'
+              name: 'Interface {#IFALIAS}: Incoming network traffic'
               type: DEPENDENT
               key: 'opnsense.interface.traffic.in[{#IFNAME}]'
               units: bps
@@ -497,11 +556,11 @@ zabbix_export:
                 key: opnsense.interface.statistics
               tags:
                 - tag: component
-                  value: network
+                  value: interface
                 - tag: interface
                   value: '{#IFALIAS}'
             - uuid: cc0951c383eb44dc9797397e12459bcf
-              name: 'Egress traffic on interface {#IFALIAS}'
+              name: 'Interface {#IFALIAS}: Outgoing network traffic'
               type: DEPENDENT
               key: 'opnsense.interface.traffic.out[{#IFNAME}]'
               units: bps
@@ -538,7 +597,7 @@ zabbix_export:
                 key: opnsense.interface.statistics
               tags:
                 - tag: component
-                  value: network
+                  value: interface
                 - tag: interface
                   value: '{#IFALIAS}'
           graph_prototypes:
@@ -676,9 +735,7 @@ zabbix_export:
               trigger_prototypes:
                 - uuid: a894f7cb387748faa2357394ce54da97
                   expression: 'avg(/OPNSENSE-BY-API/openvpn.ipsec.p2status[{#IPSECDESC}],3m)<>0'
-                  name: '{HOST.HOST}: IPSec Tunnel {#IPSECDESC} Phase2 not connected'
-                  status: DISABLED
-                  discover: NO_DISCOVER
+                  name: 'IPSec Tunnel {#IPSECDESC} Phase2 not connected'
                   priority: AVERAGE
             - uuid: 849e04b54e544769bde5a4c5c857a54b
               name: 'IPSec Tunnel {#IPSECDESC} Phase 2 Statistics'
@@ -728,9 +785,7 @@ zabbix_export:
               trigger_prototypes:
                 - uuid: 1cd3354ce6c6400aaf8b4c96357f674d
                   expression: 'avg(/OPNSENSE-BY-API/opnsense.ipsec.status[{#IPSECDESC}],3m)<>0'
-                  name: '{HOST.HOST}: IPSec Tunnel {#IPSECDESC} not connected'
-                  status: DISABLED
-                  discover: NO_DISCOVER
+                  name: 'IPSec Tunnel {#IPSECDESC} not connected'
                   priority: AVERAGE
           master_item:
             key: opnsense.ipsec.tunnels
@@ -859,7 +914,7 @@ zabbix_export:
               trigger_prototypes:
                 - uuid: 24c4c795345d464795b840fd26559db2
                   expression: 'min(/OPNSENSE-BY-API/opnsense.openvpn.status[{#VPNDESC}],3m)=2'
-                  name: '{HOST.HOST}: OpenVPN {#VPNROLE} {#VPNDESC} Disconnected'
+                  name: 'OpenVPN {#VPNROLE} {#VPNDESC} Disconnected'
                   priority: AVERAGE
                   tags:
                     - tag: component
@@ -920,7 +975,7 @@ zabbix_export:
               trigger_prototypes:
                 - uuid: 12379ec34f674c07a37f2307744727d5
                   expression: 'avg(/OPNSENSE-BY-API/opnsense.service.status[{#SVCID}], 3m)<>1'
-                  name: '{HOST.HOST}: Service {#SVCNAME} is stopped'
+                  name: 'Service {#SVCNAME} is not running'
                   priority: WARNING
           master_item:
             key: opnsense.service.get
@@ -975,6 +1030,47 @@ zabbix_export:
                   value: '{#WGTUNNELNAME}'
                 - tag: peer
                   value: '{#WGNAME}'
+            - uuid: 761c2bea538b477eb892c3dd8226bd01
+              name: 'Wireguard {#WGTUNNELNAME}: Peer {#WGNAME} latest handshake age'
+              type: DEPENDENT
+              key: 'opnsense.wireguard.latesthandshake[{#WGTUNNELNAME}-{#WGNAME}]'
+              units: s
+              preprocessing:
+                - type: CHECK_NOT_SUPPORTED
+                  parameters:
+                    - '-1'
+                - type: JAVASCRIPT
+                  parameters:
+                    - |
+                      var input = JSON.parse(value);
+                      for(var i in input["rows"]){
+                        if("{#WGNAME}" == input["rows"][i]["name"] ){
+                          return input["rows"][i]["latest-handshake-age"];
+                        }
+                      }
+              master_item:
+                key: opnsense.wireguard.status
+              tags:
+                - tag: component
+                  value: vpn
+                - tag: instance
+                  value: '{#WGTUNNELNAME}'
+                - tag: peer
+                  value: '{#WGNAME}'
+              trigger_prototypes:
+                - uuid: f4f5b6d2f687428e9d97a98c6bbd5329
+                  expression: 'last(/OPNSENSE-BY-API/opnsense.wireguard.latesthandshake[{#WGTUNNELNAME}-{#WGNAME}])>{$AGENT.TIMEOUT}'
+                  name: 'Wireguard Tunnel {#WGTUNNELNAME} to {#WGNAME} now new handshake'
+                  event_name: 'Wireguard Tunnel {#WGTUNNELNAME} to {#WGNAME} now new handshake (for >{$AGENT.TIMEOUT})'
+                  priority: AVERAGE
+                  description: 'Latest handshake older than {$AGENT.TIMEOUT}'
+                  tags:
+                    - tag: component
+                      value: vpn
+                    - tag: instance
+                      value: '{#WGTUNNELNAME}'
+                    - tag: peer
+                      value: '{#WGNAME}'
             - uuid: 257d78f39bac4023a8ac7b01d9fcf92e
               name: 'Wireguard {#WGTUNNELNAME}: Peer {#WGNAME}: Outgoing network traffic'
               type: DEPENDENT
@@ -1048,9 +1144,10 @@ zabbix_export:
                   value: '{#WGNAME}'
               trigger_prototypes:
                 - uuid: 791e1896bf29425680105a9c6589b2e1
-                  expression: 'avg(/OPNSENSE-BY-API/opnsense.wireguard.status[{#WGTUNNELNAME}-{#WGNAME}],#5)<>0'
-                  name: '{HOST.HOST}: Wireguard Tunnel {#WGTUNNELNAME} to {#WGNAME} not connected'
+                  expression: 'min(/OPNSENSE-BY-API/opnsense.wireguard.status[{#WGTUNNELNAME}-{#WGNAME}],#5)>0'
+                  name: 'Wireguard Tunnel {#WGTUNNELNAME} to {#WGNAME} not connected'
                   priority: AVERAGE
+                  description: 'None of the last 5 status reports were online (0)'
                   tags:
                     - tag: component
                       value: vpn
@@ -1176,6 +1273,6 @@ zabbix_export:
   triggers:
     - uuid: 65237821f48d491da7d84ab8c5d20217
       expression: 'last(/OPNSENSE-BY-API/opnsense.firmware.current) <> last(/OPNSENSE-BY-API/opnsense.firmware.latest)'
-      name: 'Firmware disponível'
-      event_name: '{HOST.HOST}: Firmware disponível'
+      name: 'New Firmware available'
+      opdata: 'Current:{ITEM.VALUE1} New:{ITEM.VALUE2}'
       priority: INFO
