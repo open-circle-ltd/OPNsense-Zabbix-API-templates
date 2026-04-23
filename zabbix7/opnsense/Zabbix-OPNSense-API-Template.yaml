@@ -9,7 +9,7 @@ zabbix_export:
       name: OPNSENSE-BY-API
       description: |
         Customized version from https://github.com/open-circle-ltd/OPNsense-Zabbix-API-templates/tree/exu-features
-
+        
         Zabbix Custom Templates from https://github.com/sysadminbr/zabbix-templates
         
         Templates for monitoring opnSense by api
@@ -25,7 +25,7 @@ zabbix_export:
         
         make sure that the user has to right diagnostic permissions on opnSense
       templates:
-        - name: 'FreeBSD by Zabbix agent'
+        - name: 'OCC - FreeBSD by Zabbix agent'
       groups:
         - name: 'Templates/Network devices'
       items:
