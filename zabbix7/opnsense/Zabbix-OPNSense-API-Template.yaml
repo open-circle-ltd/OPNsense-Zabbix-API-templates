@@ -1,5 +1,5 @@
 zabbix_export:
-  version: '7.4'
+  version: '7.2'
   template_groups:
     - uuid: 36bff6c29af64692839d077febfc7079
       name: 'Templates/Network devices'
@@ -8,6 +8,8 @@ zabbix_export:
       template: OPNSENSE-BY-API
       name: OPNSENSE-BY-API
       description: |
+        Customized version from https://github.com/open-circle-ltd/OPNsense-Zabbix-API-templates/tree/exu-features
+
         Zabbix Custom Templates from https://github.com/sysadminbr/zabbix-templates
         
         Templates for monitoring opnSense by api
