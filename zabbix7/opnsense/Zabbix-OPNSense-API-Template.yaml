@@ -990,7 +990,8 @@ zabbix_export:
                   for(var i in input["rows"]){
                       output["data"].push({
                           "{#SVCDESC}": input["rows"][i]["description"],
-                          "{#SVCID}": input["rows"][i]["id"]
+                          "{#SVCID}": input["rows"][i]["id"],
+                          "{#SVCNAME}": input["rows"][i]["name"]
                       });
                   }
                   return JSON.stringify(output);
@@ -1244,7 +1245,8 @@ zabbix_export:
           mappings:
             - value: '1'
               newvalue: running
-            - newvalue: stopped
+            - value: '0'
+              newvalue: stopped
         - uuid: 8b9354678f004bcd8c4c43820663d109
           name: 'Wireguard Status'
           mappings:
